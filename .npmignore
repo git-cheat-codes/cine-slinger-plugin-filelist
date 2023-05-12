@@ -1,0 +1,13 @@
+.idea
+.DS_Store
+node_modules
+
+src
+dist/test*
+dist/**.d.ts.map
+dist/**.js.map
+tsconfig.json
+
+cookies.json
+.gitignore
+.npmrc

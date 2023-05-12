@@ -1,0 +1,9 @@
+.idea
+.DS_Store
+node_modules
+
+src/test*
+dist/test*
+
+cookies.json
+.npmrc

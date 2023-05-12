@@ -1,0 +1,43 @@
+{
+  "name": "nas-movie-manager-provider-filelist",
+  "version": "0.0.12-alpha",
+  "description": "Filelist provider for nas-movie-manager",
+  "main": "index.js",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.js"
+  },
+  "provider-display-name": "Filelist.io Provider",
+  "engines": {
+    "node": ">=14.4"
+  },
+  "scripts": {
+    "test": "node dist/test.js"
+  },
+  "keywords": [
+    "nas-movie-manager",
+    "torrent-provider",
+    "filelist",
+    "filelist.io",
+    "filelist.ro"
+  ],
+  "author": "Git-Cheat-Codes",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bytes": "^3.1.1",
+    "@types/node": "^20.1.1",
+    "@types/tough-cookie": "^4.0.2",
+    "@types/tough-cookie-file-store": "^2.0.1",
+    "nas-movie-manager-provider-types": "^0.0.11-alpha"
+  },
+  "dependencies": {
+    "bytes": "^3.1.2",
+    "cheerio": "^1.0.0-rc.12",
+    "desm": "^1.3.0",
+    "got": "^12.6.0",
+    "parse-torrent-title": "^1.3.0",
+    "tough-cookie": "^4.1.2",
+    "tough-cookie-file-store": "^2.0.3"
+  }
+}
