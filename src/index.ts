@@ -45,7 +45,6 @@ class FilelistProvider implements TorrentProvider {
 		this.log.info(`Initialized and logged in v${versionLoaded}`);
 	}
 
-
 	async searchMovie(movie: MovieDetails): Promise<MovieTorrentInfo[]> {
 		const searchRes = await this.api.search(movie.imdbId.toString());
 
