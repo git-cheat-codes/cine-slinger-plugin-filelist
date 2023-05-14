@@ -45,7 +45,7 @@ export default class FileList {
         this.log.debug("Clearing cookies");
         await this.cookieJar.removeAllCookies();
     }
-    search(query, opt) {
+    search(query, opt, retry = 0) {
         const options = Object.assign({
             search: query,
             cat: 0,
@@ -53,6 +53,12 @@ export default class FileList {
             sort: 0,
             page: 0
         }, opt);
+        if (retry >= 1) {
+            this.log.debug(`Login retry ${retry}`);
+        }
+        if (retry >= 3) {
+            throw new Error(`Cannot login. Retried ${retry} times`);
+        }
         return new Promise(async (resolve, reject) => {
             this.client.get("browse.php", {
                 headers: {
@@ -60,11 +66,13 @@ export default class FileList {
                 },
                 searchParams: options
             }).then(res => {
-                if (res.redirectUrls.some(url => url.pathname.includes('/login'))) {
+                if (redirectedToLogin(res)) {
                     this.log.debug("Not logged in");
                     return this.login().then(() => {
-                        this.search(query, options).then(resolve).catch(reject);
-                    }).catch(reject);
+                        this.search(query, options, retry + 1).then(resolve).catch(reject);
+                    }).catch(err => {
+                        reject(err);
+                    });
                 }
                 const $ = loadHTML(res.body);
                 let torrents = [];
@@ -119,15 +127,17 @@ export default class FileList {
             }).catch(reject);
         });
     }
-    login() {
+    async login() {
         if (this.loginPromise) {
             return this.loginPromise;
         }
-        this.loginPromise = this.handleLoginResponse();
-        this.loginPromise.finally(() => {
+        try {
+            this.loginPromise = this.handleLoginResponse();
+            return await this.loginPromise;
+        }
+        finally {
             this.loginPromise = null;
-        });
-        return this.loginPromise;
+        }
     }
     async handleLoginResponse() {
         const res = await this.client.get("my.php");
@@ -146,18 +156,24 @@ export default class FileList {
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
         });
-        if (loginRes.body.trim() !== "" && !loginRes.url.includes("/takelogin/")) {
+        if (!loginRes.url.includes("/takelogin") && loginRes.body.trim() !== "") {
             this.log.debug("Logged in successfully");
         }
         else {
-            throw loginRes;
+            throw new Error(`Invalid login credentials for ${this.baseUrl}`);
         }
     }
-    async download(torrentUrl) {
+    async download(torrentUrl, retry = 0) {
+        if (retry >= 1) {
+            this.log.debug(`Login retry ${retry}`);
+        }
+        if (retry >= 3) {
+            throw new Error(`Cannot login. Retried ${retry} times`);
+        }
         const res = await this.client.get(torrentUrl);
         if (redirectedToLogin(res)) {
             await this.login();
-            return await this.download(torrentUrl);
+            return await this.download(torrentUrl, retry + 1);
         }
         return res.rawBody;
     }

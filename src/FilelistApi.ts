@@ -90,7 +90,7 @@ export default class FileList {
 		await this.cookieJar.removeAllCookies();
 	}
 
-	public search(query: string, opt?: FilelistSearchOptions): Promise<FilelistSearchResult> {
+	public search(query: string, opt?: FilelistSearchOptions, retry: number = 0): Promise<FilelistSearchResult> {
 		const options = Object.assign({
 			search: query,
 			cat: 0,
@@ -98,6 +98,14 @@ export default class FileList {
 			sort: 0,
 			page: 0
 		}, opt);
+
+		if(retry >= 1){
+			this.log.debug(`Login retry ${retry}`)
+		}
+		
+		if(retry >= 3){
+			throw new Error(`Cannot login. Retried ${retry} times`)
+		}
 
 
 		return new Promise<FilelistSearchResult>(async (resolve, reject) => {
@@ -108,11 +116,13 @@ export default class FileList {
 				searchParams: <any> options
 			}
 			).then(res => {
-				if (res.redirectUrls.some(url => url.pathname.includes('/login'))) {
+				if (redirectedToLogin(res)) {
 					this.log.debug("Not logged in");
 					return this.login().then(() => {
-						this.search(query, options).then(resolve).catch(reject);
-					}).catch(reject);
+						this.search(query, options, retry+1).then(resolve).catch(reject);
+					}).catch(err => {
+						reject(err);
+					});
 				}
 
 				const $ = loadHTML(res.body);
@@ -172,15 +182,16 @@ export default class FileList {
 		});
 	}
 
-	login(): Promise<void> {
+	async login(): Promise<void> {
 		if (this.loginPromise) {
 			return this.loginPromise;
 		}
-		this.loginPromise = this.handleLoginResponse();
-		this.loginPromise.finally(() => {
+		try{
+			this.loginPromise =  this.handleLoginResponse();
+			return await this.loginPromise;
+		}finally {
 			this.loginPromise = null;
-		});
-		return this.loginPromise;
+		}
 	}
 
 	async handleLoginResponse() {
@@ -200,18 +211,26 @@ export default class FileList {
 				'Content-Type': 'application/x-www-form-urlencoded'
 			}
 		});
-		if(loginRes.body.trim() !== "" && !loginRes.url.includes("/takelogin/")){
+		if (!loginRes.url.includes("/takelogin") && loginRes.body.trim() !== "") {
 			this.log.debug("Logged in successfully");
-		}else{
-			throw loginRes;
+		} else {
+			throw new Error(`Invalid login credentials for ${this.baseUrl}`);
 		}
 	}
 
-	async download(torrentUrl: string): Promise<Buffer> {
+	async download(torrentUrl: string, retry: number = 0): Promise<Buffer> {
+		if(retry >= 1){
+			this.log.debug(`Login retry ${retry}`)
+		}
+
+		if(retry >= 3){
+			throw new Error(`Cannot login. Retried ${retry} times`)
+		}
+
 		const res = await this.client.get(torrentUrl);
 		if (redirectedToLogin(res)) {
 			await this.login();
-			return await this.download(torrentUrl);
+			return await this.download(torrentUrl, retry + 1);
 		}
 		return res.rawBody;
 	}

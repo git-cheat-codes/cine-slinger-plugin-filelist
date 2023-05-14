@@ -43,9 +43,9 @@ export default class FileList {
     private client;
     constructor(opt: FileListConstr);
     clearCookies(): Promise<void>;
-    search(query: string, opt?: FilelistSearchOptions): Promise<FilelistSearchResult>;
+    search(query: string, opt?: FilelistSearchOptions, retry?: number): Promise<FilelistSearchResult>;
     login(): Promise<void>;
     handleLoginResponse(): Promise<void>;
-    download(torrentUrl: string): Promise<Buffer>;
+    download(torrentUrl: string, retry?: number): Promise<Buffer>;
 }
 //# sourceMappingURL=FilelistApi.d.ts.map

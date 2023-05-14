@@ -1,4 +1,4 @@
-import type { Logger, MovieDetails, MovieTorrentInfo, ProviderConfig, ProviderInfo, Torrent, TorrentProvider } from "nas-movie-manager-provider-types";
+import type { Logger, MovieSearchDetails, MovieTorrentInfo, ProviderConfig, ProviderInfo, Torrent, TorrentProvider } from "nas-movie-manager-provider-types";
 import FileList from "./FilelistApi.js";
 interface FilelistConfig extends ProviderConfig {
     username: string;
@@ -10,7 +10,7 @@ declare class FilelistProvider implements TorrentProvider {
     log: Logger;
     getTorrentFor(movie: MovieTorrentInfo): Promise<Torrent>;
     init(config: FilelistConfig, log: Logger): Promise<void>;
-    searchMovie(movie: MovieDetails): Promise<MovieTorrentInfo[]>;
+    searchMovie(movie: MovieSearchDetails): Promise<MovieTorrentInfo[]>;
     clearData(): Promise<void>;
 }
 export default FilelistProvider;

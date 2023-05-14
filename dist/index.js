@@ -7,11 +7,13 @@ import { parse as torrentParse } from "parse-torrent-title";
 const _dirname = dirname(import.meta.url);
 const pkgJson = join(_dirname, "../package.json");
 const versionLoaded = JSON.parse(await readFile(join(_dirname, "../package.json"), { encoding: "utf-8" }))?.version;
+//todo change type of resolution to sd
 class FilelistProvider {
     api;
     log;
     async getTorrentFor(movie) {
         return {
+            isMagnet: false,
             file: await this.api.download(movie._props.downloadUrl)
         };
     }
@@ -20,15 +22,15 @@ class FilelistProvider {
         this.api = new FileList({ ...config, log, cookieFile });
         this.log = log;
         await this.api.login();
-        this.log.info(`Initialized and logged in v${versionLoaded}`);
+        this.log.info(`Initialized and logged in v${versionLoaded}; Config` + JSON.stringify(config));
     }
     async searchMovie(movie) {
         const searchRes = await this.api.search(movie.imdbId.toString());
         return searchRes.torrents.map(tor => ({
             id: tor.id,
-            torrentName: tor.title,
+            torrentTile: tor.title,
             size: bytesParse(tor.size),
-            peers: tor.seeds,
+            seeds: tor.seeds,
             info: torrentParse(tor.title),
             _props: {
                 downloadUrl: tor.url,

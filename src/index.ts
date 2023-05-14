@@ -1,6 +1,6 @@
 import type {
 	Logger,
-	MovieDetails,
+	MovieSearchDetails,
 	MovieTorrentInfo,
 	ProviderConfig,
 	ProviderInfo,
@@ -26,14 +26,15 @@ const versionLoaded = JSON.parse(
 	await readFile(join(_dirname, "../package.json"), {encoding: "utf-8"})
 )?.version;
 
-
+//todo change type of resolution to sd
 class FilelistProvider implements TorrentProvider {
 	api!: FileList;
 	log!: Logger;
 
 	async getTorrentFor(movie: MovieTorrentInfo): Promise<Torrent> {
 		return {
-			file: await this.api.download(movie._props.downloadUrl)
+			isMagnet: false,
+			file: await this.api.download(movie._props!.downloadUrl)
 		}
 	}
 
@@ -42,17 +43,17 @@ class FilelistProvider implements TorrentProvider {
 		this.api = new FileList({...config, log, cookieFile});
 		this.log = log;
 		await this.api.login();
-		this.log.info(`Initialized and logged in v${versionLoaded}`);
+		this.log.info(`Initialized and logged in v${versionLoaded}; Config` + JSON.stringify(config));
 	}
 
-	async searchMovie(movie: MovieDetails): Promise<MovieTorrentInfo[]> {
+	async searchMovie(movie: MovieSearchDetails): Promise<MovieTorrentInfo[]> {
 		const searchRes = await this.api.search(movie.imdbId.toString());
 
 		return searchRes.torrents.map(tor => ({
 			id: tor.id,
-			torrentName: tor.title,
+			torrentTile: tor.title,
 			size: bytesParse(tor.size),
-			peers: tor.seeds,
+			seeds: tor.seeds,
 			info: torrentParse(tor.title),
 			_props: {
 				downloadUrl: tor.url,
